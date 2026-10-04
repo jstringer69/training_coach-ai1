@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1726" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Training Coach AI" />
+  <title>Training Coach AI</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css?v=20261004-3" />
+</head>
+<body>
+  <div id="fatalError" class="fatal-error" hidden></div>
+  <header class="app-header">
+    <div>
+      <div class="eyebrow">Adaptive hypertrophy • recovery-aware progression</div>
+      <h1>Training Coach <span class="ai-badge">AI</span></h1>
+      <div class="build">v2.1 • build 2026.10.04.3</div>
+    </div>
+    <button id="installBtn" class="ghost" hidden>Install</button>
+  </header>
+
+  <main>
+    <section id="dashboard" class="view active">
+      <div class="hero-card">
+        <div>
+          <span class="pill" id="phasePill">Re-entry</span>
+          <h2 id="nextWorkoutTitle">Next: Workout B</h2>
+          <p id="nextWorkoutSubtitle">Loading training state…</p>
+          <p id="coachAction" class="coach-action"></p>
+        </div>
+        <button type="button" class="primary big" id="startNextBtn">Start next workout</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat"><span>Rotation</span><strong id="rotationStat">B → C → D → A</strong></div>
+        <div class="stat"><span>Last bodyweight</span><strong id="weightStat">—</strong></div>
+        <div class="stat"><span>Sessions logged</span><strong id="sessionCount">0</strong></div>
+        <div class="stat"><span>AI status</span><strong id="aiStatus">Checking…</strong></div>
+      </div>
+
+      <div class="card coach-card">
+        <div class="card-head"><h3>Coach state</h3><button id="dashboardAiBtn" class="secondary small">AI review</button></div>
+        <p id="coachStateText">Your first two exposures of each workout are deliberately conservative after the move-related layoff.</p>
+        <div id="latestCoachSummary" class="coach-summary muted">No post-workout review yet.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Recent sessions</h3><button class="text-btn" data-go="history">View all</button></div>
+        <div id="recentSessions" class="empty">No sessions logged yet.</div>
+      </div>
+    </section>
+
+    <section id="program" class="view">
+      <div class="section-title"><h2>Program</h2><p>Four-workout rotation adapted to the community gym. The AI coach can modify the prescription without rewriting the base program.</p></div>
+      <div class="logic-banner">
+        <strong>Current logic:</strong> re-entry first, then double progression. B is the primary quad exposure; D is posterior/lower. Stable machines carry more hypertrophy work while front squats and incline dumbbells retain skill and strength.
+      </div>
+      <div id="programCards"></div>
+    </section>
+
+    <section id="log" class="view">
+      <div class="section-title"><h2>Log workout</h2><p id="logPhaseHint"></p></div>
+      <form id="workoutForm">
+        <div class="card form-grid">
+          <label>Workout<select id="workoutSelect"></select></label>
+          <label>Date<input id="dateInput" type="date" /></label>
+          <label>Bodyweight (lb)<input id="bodyweightInput" type="number" step="0.1" inputmode="decimal" /></label>
+          <label>Duration (min)<input id="durationInput" type="number" step="0.1" inputmode="decimal" /></label>
+          <label>Readiness (1–10)<input id="readinessInput" type="number" min="1" max="10" step="1" inputmode="numeric" /></label>
+          <label>DOMS today (0–10)<input id="domsInput" type="number" min="0" max="10" step="1" inputmode="numeric" /></label>
+          <label>Pre-workout<input id="preInput" type="text" placeholder="None / ½ scoop Igniter" /></label>
+          <label>Intra-workout<input id="intraInput" type="text" value="1 scoop Surge Clone + 15 g creatine" /></label>
+        </div>
+
+        <div class="card training-timer-card">
+          <div class="timer-head">
+            <div>
+              <div class="timer-label">Workout timer</div>
+              <div id="workoutTimerDisplay" class="workout-clock">00:00:00</div>
+              <div id="workoutTimerStatus" class="muted">Not started</div>
+            </div>
+            <div class="timer-controls">
+              <button type="button" id="startTrainingBtn" class="primary">Start training</button>
+              <button type="button" id="pauseWorkoutBtn" class="secondary" hidden>Pause workout</button>
+              <button type="button" id="resumeWorkoutBtn" class="primary" hidden>Resume workout</button>
+              <button type="button" id="endWorkoutBtn" class="danger" hidden>End workout</button>
+            </div>
+          </div>
+          <div class="rest-panel">
+            <div>
+              <div class="timer-label">Rest timer</div>
+              <div id="restTimerDisplay" class="rest-clock">--:--</div>
+              <div id="restTimerStatus" class="muted">Tap “Complete set” after a set; the prescribed rest countdown starts automatically.</div>
+            </div>
+            <div class="rest-controls">
+              <button type="button" id="add30RestBtn" class="ghost small" hidden>+30 sec</button>
+              <button type="button" id="skipRestBtn" class="ghost small" hidden>Skip rest</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card safety-card">
+          <div class="switch-row">
+            <div><strong>Pain or injury-type symptom today?</strong><div class="muted">Use this for sharp/localized pain, not ordinary muscle soreness.</div></div>
+            <label class="switch"><input id="painToggle" type="checkbox"/><span></span></label>
+          </div>
+          <div id="painFields" hidden>
+            <label class="full">Pain / symptom notes<textarea id="painNotes" rows="2" placeholder="Location, sensation, when it appears…"></textarea></label>
+          </div>
+        </div>
+
+        <div id="prescriptionBanner" class="prescription-banner" hidden></div>
+        <div id="exerciseLogger"></div>
+
+        <div class="card">
+          <h3>Session pump</h3>
+          <p class="muted">1 = little/no pump • 10 = skin-splitting. Leave untrained areas blank.</p>
+          <div class="pump-grid" id="pumpGrid"></div>
+          <label class="full">Session notes<textarea id="sessionNotes" rows="3" placeholder="DOMS, technique, equipment calibration, joint feedback, work capacity…"></textarea></label>
+        </div>
+
+        <button class="primary save-btn" type="submit">Save workout & analyze</button>
+      </form>
+    </section>
+
+    <section id="coach" class="view">
+      <div class="section-title"><h2>Coach</h2><p>Local guardrails always work. AI review adds multi-session judgment when the app is running through the included server with an API key.</p></div>
+      <div class="card">
+        <div class="card-head"><h3>Latest analysis</h3><button id="coachAiBtn" class="primary small">Run AI review</button></div>
+        <div id="coachLoading" class="loading" hidden>Reviewing recent training, recovery and progression…</div>
+        <div id="coachOutput" class="coach-output"><p class="muted">Save a workout to generate a local review.</p></div>
+      </div>
+      <div class="card">
+        <h3>Why the coach made that call</h3>
+        <div id="localLogicOutput" class="coach-output muted">No session analyzed yet.</div>
+      </div>
+    </section>
+
+    <section id="history" class="view">
+      <div class="section-title"><h2>History</h2><p>Stored locally on this device. AI review sends only the training context required for coaching.</p></div>
+      <div class="button-row">
+        <button id="exportBtn" class="secondary">Export JSON</button>
+        <button id="exportCsvBtn" class="secondary">Export CSV</button>
+        <label class="secondary file-label">Import JSON<input id="importInput" type="file" accept="application/json" hidden /></label>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <section id="settings" class="view">
+      <div class="section-title"><h2>Settings</h2><p>Training profile, progression increments and data controls.</p></div>
+      <div class="card">
+        <h3>Training profile</h3>
+        <label class="full">Coach memory<textarea id="profileNotes" rows="9"></textarea></label>
+        <button id="saveProfileBtn" class="secondary">Save profile</button>
+      </div>
+      <div class="card">
+        <h3>Progression increments</h3>
+        <div id="incrementSettings"></div>
+      </div>
+      <div class="card">
+        <h3>AI connection</h3>
+        <p id="aiSettingsText" class="muted">Checking server…</p>
+        <p class="muted">The API key belongs on the server as <code>OPENAI_API_KEY</code>; it is never stored in the browser.</p>
+      </div>
+      <div class="card danger-zone">
+        <h3>Data</h3>
+        <button id="resetBtn" class="danger">Reset app data</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="dashboard"><span>⌂</span>Home</button>
+    <button class="nav-btn" data-view="program"><span>▦</span>Program</button>
+    <button class="nav-btn" data-view="log"><span>＋</span>Log</button>
+    <button class="nav-btn" data-view="coach"><span>◆</span>Coach</button>
+    <button class="nav-btn" data-view="history"><span>≡</span>History</button>
+    <button class="nav-btn" data-view="settings"><span>⚙</span>Settings</button>
+  </nav>
+
+  <script src="app.js?v=20261004-3"></script>
+</body>
+</html>
