@@ -10,16 +10,19 @@
   <title>Training Coach AI</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=20261004-3" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="styles.css?v=20261005-2" />
 </head>
 <body>
   <div id="fatalError" class="fatal-error" hidden></div>
   <header class="app-header">
-    <div>
-      <div class="eyebrow">Adaptive hypertrophy • recovery-aware progression</div>
-      <h1>Training Coach <span class="ai-badge">AI</span></h1>
-      <div class="build">v2.1 • build 2026.10.04.3</div>
+    <div class="brand-wrap">
+      <img class="brand-logo" src="icon-192.png" alt="Bulldog Fitness logo" />
+      <div>
+        <div class="eyebrow">Adaptive hypertrophy • recovery-aware progression</div>
+        <h1>Training Coach <span class="ai-badge">AI</span></h1>
+        <div class="build">v2.2 • build 2026.10.05.2</div>
+      </div>
     </div>
     <button id="installBtn" class="ghost" hidden>Install</button>
   </header>
@@ -71,11 +74,13 @@
           <label>Date<input id="dateInput" type="date" /></label>
           <label>Bodyweight (lb)<input id="bodyweightInput" type="number" step="0.1" inputmode="decimal" /></label>
           <label>Duration (min)<input id="durationInput" type="number" step="0.1" inputmode="decimal" /></label>
-          <label>Readiness (1–10)<input id="readinessInput" type="number" min="1" max="10" step="1" inputmode="numeric" /></label>
-          <label>DOMS today (0–10)<input id="domsInput" type="number" min="0" max="10" step="1" inputmode="numeric" /></label>
+          <label>Readiness (1–10)<input id="readinessInput" type="number" min="1" max="10" step="1" inputmode="numeric" placeholder="1 low • 10 excellent" /></label>
+          <label>DOMS today (0–10)<input id="domsInput" type="number" min="0" max="10" step="1" inputmode="numeric" placeholder="0 none • 10 severe" /></label>
           <label>Pre-workout<input id="preInput" type="text" placeholder="None / ½ scoop Igniter" /></label>
           <label>Intra-workout<input id="intraInput" type="text" value="1 scoop Surge Clone + 15 g creatine" /></label>
         </div>
+
+        <div id="dailyAdjustmentBanner" class="daily-adjustment card" hidden></div>
 
         <div class="card training-timer-card">
           <div class="timer-head">
@@ -101,6 +106,10 @@
               <button type="button" id="add30RestBtn" class="ghost small" hidden>+30 sec</button>
               <button type="button" id="skipRestBtn" class="ghost small" hidden>Skip rest</button>
             </div>
+          </div>
+          <div class="live-summary-row">
+            <div><span>Total weight moved</span><strong id="liveVolumeStat">0 lb</strong></div>
+            <div><span>Working sets logged</span><strong id="liveSetStat">0</strong></div>
           </div>
         </div>
 
@@ -148,6 +157,10 @@
         <button id="exportCsvBtn" class="secondary">Export CSV</button>
         <label class="secondary file-label">Import JSON<input id="importInput" type="file" accept="application/json" hidden /></label>
       </div>
+      <div class="history-charts">
+        <div class="card chart-card"><div class="card-head"><h3>Total weight moved</h3><span class="muted">By workout type</span></div><div id="volumeChart" class="chart-wrap"></div></div>
+        <div class="card chart-card"><div class="card-head"><h3>Session duration</h3><span class="muted">By workout type</span></div><div id="durationChart" class="chart-wrap"></div></div>
+      </div>
       <div id="historyList" class="history-list"></div>
     </section>
 
@@ -174,6 +187,14 @@
     </section>
   </main>
 
+  <div id="sessionModal" class="session-modal" hidden>
+    <div class="session-modal-backdrop" data-close-session></div>
+    <article class="session-modal-card" role="dialog" aria-modal="true" aria-labelledby="sessionModalTitle">
+      <div class="card-head"><h2 id="sessionModalTitle">Workout details</h2><button type="button" class="ghost small" data-close-session>Close</button></div>
+      <div id="sessionModalBody"></div>
+    </article>
+  </div>
+
   <nav class="bottom-nav">
     <button class="nav-btn active" data-view="dashboard"><span>⌂</span>Home</button>
     <button class="nav-btn" data-view="program"><span>▦</span>Program</button>
@@ -183,6 +204,6 @@
     <button class="nav-btn" data-view="settings"><span>⚙</span>Settings</button>
   </nav>
 
-  <script src="app.js?v=20261004-3"></script>
+  <script src="app.js?v=20261005-2"></script>
 </body>
 </html>

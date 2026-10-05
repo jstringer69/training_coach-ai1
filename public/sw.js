@@ -1,5 +1,5 @@
-const CACHE='training-coach-ai-v2-20261004-3';
-const CORE=['./','index.html','styles.css?v=20261004-3','app.js?v=20261004-3','manifest.webmanifest','icon-192.png','icon-512.png'];
+const CACHE='training-coach-ai-v2-20261005-2';
+const CORE=['./','index.html','styles.css?v=20261005-2','app.js?v=20261005-2','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).catch(()=>{}));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{for(const key of await caches.keys()){if(key!==CACHE)await caches.delete(key)}await self.clients.claim()})())});
 self.addEventListener('fetch',event=>{

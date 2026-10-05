@@ -56,6 +56,17 @@ Set environment variables:
 - `OPENAI_REASONING_EFFORT` — default `high`
 - `PORT` — usually supplied automatically by the host
 
+
+## Version 2.2 additions
+
+- Bulldog Fitness artwork is now the installed PWA/device icon and in-app brand mark. A padded maskable icon is included so Android adaptive-icon masks do not cut off the artwork.
+- History cards can be opened to inspect the full prior session: exercises, sets, weight, reps, RIR, rest, notes, readiness/DOMS, pump and session summary.
+- Total weight moved is calculated from logged weight × reps, shown live during training, stored with the session, displayed in History, included in CSV export and surfaced in the coach summary.
+- History includes color-coded A/B/C/D plots for total weight moved and session duration.
+- Every exercise has an **Add another set** control. Added sets are marked in history and participate in total-volume calculation and the rest-timer workflow.
+- Day-of readiness/DOMS logic changes the prescription before training begins. Low readiness/high DOMS reduces sets and raises target RIR; high readiness with low DOMS lets primary work run about 0.5 RIR harder. Re-entry safety limits still apply.
+- Recent-session cards on the dashboard can also be opened directly.
+
 ## Coaching workflow
 
 - Dashboard tells you the next A/B/C/D workout.
