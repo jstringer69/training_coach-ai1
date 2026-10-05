@@ -57,6 +57,14 @@ Set environment variables:
 - `PORT` — usually supplied automatically by the host
 
 
+
+## Version 2.3 additions
+
+- Past workout details now include **Edit recorded sets**. Users can retroactively correct weight, reps, and RIR for any saved set.
+- Saving historical corrections automatically recalculates total weight moved, refreshes History cards/charts, and updates local coaching logic.
+- If historical data is corrected, the current AI review/prescription is cleared so stale recommendations are not presented as current; run AI review again to coach from the corrected record.
+- Edited sessions are timestamped in the workout detail view.
+
 ## Version 2.2 additions
 
 - Bulldog Fitness artwork is now the installed PWA/device icon and in-app brand mark. A padded maskable icon is included so Android adaptive-icon masks do not cut off the artwork.
