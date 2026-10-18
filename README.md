@@ -58,6 +58,14 @@ Set environment variables:
 
 
 
+
+## Version 2.4 additions
+
+- History now includes a **Bodyweight** trend chart using every saved session that contains a bodyweight entry. Workout-type colors remain visible on the plotted session points.
+- The bodyweight chart uses a focused y-axis range around the recorded values instead of starting at zero, making small changes easier to see.
+- Once **Start training** is pressed, the sticky workout/rest timer collapses into a compact training bar so substantially more of the exercise list remains visible on a phone.
+- The compact timer preserves workout time, rest time, pause/resume/end controls, and live volume/set counts while removing nonessential helper text on narrow screens.
+
 ## Version 2.3 additions
 
 - Past workout details now include **Edit recorded sets**. Users can retroactively correct weight, reps, and RIR for any saved set.
