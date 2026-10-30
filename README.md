@@ -116,3 +116,16 @@ Version 2.1 adds a live workout timer and set-driven rest timers. Open the Log s
 Each programmed set now has a **Complete set** button. Enter the set's reps (and any other log details), then tap Complete set. The app starts a countdown using that set's Rest value. You can add 30 seconds or skip the countdown. When rest expires, the app changes the display, vibrates when supported, and plays a short tone when the browser allows audio. The rest timer also pauses and resumes with the workout timer.
 
 The browser cannot reliably detect the physical end of a set on its own, so the Complete set tap is the explicit trigger that makes the rest timer accurate and prevents accidental countdowns while editing the log.
+
+
+## v2.6 history integrity changes
+
+- Past sessions can now be permanently deleted from History after a confirmation prompt.
+- Empty/incomplete sessions with no completed repetitions remain visible so they can be inspected or deleted, but they are ignored by:
+  - exposure counts and re-entry/accumulation logic,
+  - recent-session summaries,
+  - volume, duration and bodyweight charts,
+  - progression history,
+  - AI coaching payloads.
+- The workout form will no longer save a session unless at least one set has recorded repetitions.
+- Importing an older backup automatically recalculates exposure counts using meaningful sessions only.
