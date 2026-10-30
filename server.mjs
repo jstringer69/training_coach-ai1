@@ -11,9 +11,9 @@ const EFFORT=process.env.OPENAI_REASONING_EFFORT||'high';
 const API_KEY=process.env.OPENAI_API_KEY||'';
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.webmanifest':'application/manifest+json','.png':'image/png','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8'};
 
-function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store'});res.end(typeof body==='string'?body:JSON.stringify(body))}
+function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{'Content-Type':type,'Cache-Control':'no-store','Permissions-Policy':'screen-wake-lock=(self)'});res.end(typeof body==='string'?body:JSON.stringify(body))}
 function collect(req){return new Promise((resolve,reject)=>{let data='';req.on('data',c=>{data+=c;if(data.length>2_000_000){reject(new Error('Request too large'));req.destroy()}});req.on('end',()=>resolve(data));req.on('error',reject)})}
-function staticFile(req,res){let raw=new URL(req.url,'http://localhost').pathname;if(raw==='/')raw='/index.html';const file=path.normalize(path.join(PUBLIC,decodeURIComponent(raw)));if(!file.startsWith(PUBLIC)){send(res,403,'Forbidden','text/plain');return}fs.stat(file,(err,st)=>{if(err||!st.isFile()){send(res,404,'Not found','text/plain');return}const ext=path.extname(file);res.writeHead(200,{'Content-Type':MIME[ext]||'application/octet-stream','Cache-Control':ext==='.html'?'no-cache':'public, max-age=300'});fs.createReadStream(file).pipe(res)})}
+function staticFile(req,res){let raw=new URL(req.url,'http://localhost').pathname;if(raw==='/')raw='/index.html';const file=path.normalize(path.join(PUBLIC,decodeURIComponent(raw)));if(!file.startsWith(PUBLIC)){send(res,403,'Forbidden','text/plain');return}fs.stat(file,(err,st)=>{if(err||!st.isFile()){send(res,404,'Not found','text/plain');return}const ext=path.extname(file);res.writeHead(200,{'Content-Type':MIME[ext]||'application/octet-stream','Cache-Control':ext==='.html'?'no-cache':'public, max-age=300','Permissions-Policy':'screen-wake-lock=(self)'});fs.createReadStream(file).pipe(res)})}
 
 const schema={type:'object',properties:{
  session_grade:{type:'string'},session_assessment:{type:'string'},recommended_action:{type:'string',enum:['train','rest','train_modified']},
@@ -31,9 +31,29 @@ async function coach(body){
  const state=body.state||{};const current=body.currentSession||{};const program=body.program||{};
  const system=`You are an experienced evidence-informed hypertrophy and strength coach. Your task is to make conservative, individualized programming decisions from actual workout logs, not merely apply a mechanical add-weight rule.\n\nPriorities:\n1. Long-term training consistency and joint/tissue tolerance.\n2. Hypertrophy as the primary goal while retaining useful strength.\n3. Respect the program roles: A primary back/upper chest; B primary quad; C chest/arms/delts with secondary back; D posterior/lower with secondary quad. Do not make every exposure equally hard.\n4. During re-entry after a layoff, use reduced volume and generally 3–4 RIR for the first two exposures of each workout. Do not chase historical PRs.\n5. Use load, reps, RIR, rest, pump, DOMS, readiness, pain notes, session duration, total weight moved and multi-session trends together. Pump is secondary; 6–8 is productive and 9–10 is not required. DOMS alone is not proof of a good workout.\n6. If the user reports sharp/localized pain or injury-like symptoms, do not diagnose. Modify/stop the provoking movement and recommend professional evaluation when symptoms are significant, recurrent or persistent.\n7. The shoulder historically dislikes overhead pressing; do not introduce it without a strong reason. Heavy RDLs/back squats historically irritated the low back/SI area. Front squats and low-incline dumbbell pressing were tolerated. Prior left hamstring strain recovered but warrants measured direct-loading progression and 24–48 hour response monitoring.\n8. Keep sessions around 50–60 minutes when practical; do not add volume just because the athlete can tolerate it.\n9. Use double progression: earn load increases by owning the rep range at the intended RIR. Do not increase load and volume simultaneously without a clear reason.\n10. Be precise and plainspoken. Do not manufacture PRs or facts not present in the logs.\n\nReturn only the structured output requested by the schema. The next_workout must normally be the rotation's next code unless recovery requires modification; if recommending rest, keep the next workout code unchanged and set recommended_action to rest.`;
  const user={training_profile:state.profileNotes,coach_memory:state.coachMemory,current_phase:state.phase,next_workout_planned:state.nextWorkout,exposures:state.exposures,current_session:current,recent_sessions:compactSessions(state.sessions),base_program:program};
- const payload={model:MODEL,reasoning:{effort:EFFORT},store:false,max_output_tokens:5000,input:[{role:'system',content:system},{role:'user',content:`Analyze the current session and prescribe the next workout using this training state:\n${JSON.stringify(user)}`}],text:{format:{type:'json_schema',name:'training_coach_review',strict:true,schema}}};
- const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(payload)});
- const j=await r.json();if(!r.ok){const msg=j?.error?.message||`OpenAI API error ${r.status}`;throw Object.assign(new Error(msg),{status:r.status})}const txt=extractText(j);if(!txt)throw new Error('No structured output returned.');return JSON.parse(txt);
+ const basePayload={model:MODEL,reasoning:{effort:EFFORT},store:false,input:[{role:'system',content:system},{role:'user',content:`Analyze the current session and prescribe the next workout using this training state:
+${JSON.stringify(user)}`}],text:{format:{type:'json_schema',name:'training_coach_review',strict:true,schema}}};
+ async function requestReview(maxOutputTokens){
+  const payload={...basePayload,max_output_tokens:maxOutputTokens};
+  const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{'Authorization':`Bearer ${API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  let j;try{j=await r.json()}catch{throw Object.assign(new Error(`OpenAI API returned an unreadable response (${r.status}).`),{status:502})}
+  if(!r.ok){const msg=j?.error?.message||`OpenAI API error ${r.status}`;throw Object.assign(new Error(msg),{status:r.status})}
+  const txt=extractText(j);const incomplete=j?.status==='incomplete';const reason=j?.incomplete_details?.reason||'';
+  if(!txt)throw Object.assign(new Error(incomplete?`AI response was incomplete${reason?` (${reason})`:''}.`:'No structured output returned.'),{retryable:incomplete});
+  try{return JSON.parse(txt)}catch(err){
+   const likelyTruncated=incomplete||/unterminated|unexpected end/i.test(String(err?.message||''));
+   const wrapped=new Error(likelyTruncated?`AI response was truncated before the structured review finished${reason?` (${reason})`:''}.`:`AI returned invalid structured JSON: ${err.message}`);
+   wrapped.retryable=likelyTruncated;throw wrapped;
+  }
+ }
+ try{return await requestReview(9000)}catch(err){
+  if(!err.retryable)throw err;
+  console.warn(`AI review incomplete at 9000 tokens; retrying with a larger budget: ${err.message}`);
+  try{return await requestReview(14000)}catch(retryErr){
+   if(retryErr.retryable)throw Object.assign(new Error('AI review could not complete its structured response after an automatic retry. Please try again; the workout data remains saved.'),{status:502});
+   throw retryErr;
+  }
+ }
 }
 
 const server=http.createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost');if(u.pathname==='/api/health'){send(res,200,{ok:true,ai:!!API_KEY,model:API_KEY?`${MODEL} (${EFFORT})`:null});return}if(u.pathname==='/api/coach'&&req.method==='POST'){const raw=await collect(req);const body=JSON.parse(raw||'{}');const review=await coach(body);send(res,200,{review});return}if(u.pathname.startsWith('/api/')){send(res,404,{error:'Unknown API route'});return}staticFile(req,res)}catch(e){send(res,e.status||500,{error:e.message||'Server error'})}});

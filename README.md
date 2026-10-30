@@ -1,3 +1,9 @@
+## v2.5 reliability update
+
+- AI review detects truncated/incomplete structured output and retries automatically with a larger output budget.
+- Client retries one transient fetch/server failure before surfacing an error.
+- Active workouts request a Screen Wake Lock; pause/end releases it, and returning to the visible app reacquires it.
+
 # Training Coach AI v2
 
 A mobile-first workout logger plus two-layer coaching system:
